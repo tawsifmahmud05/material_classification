@@ -57,16 +57,38 @@ async function classifyImage() {
   try {
     const image = new Image();
     image.src = img.src;
-    image.onload = () => {
-      const tensor = tf.browser.fromPixels(image);
-      console.log(tensor);
-      // const model = await tf.loadLayersModel(
-      //   "./Model/tfjs_alexnet_model/model.json"
-      // );
-      // console.log(model.summary());
-      // const predictions = await model.predict(x);
-      // displayResults(predictions);
+    image.onload = async () => {
+      const tensor = tf.browser.fromPixels(image, 3);
+      const resizedImg = tf.image.resizeBilinear(tensor, [28, 28]);
+      const normalizedImg = resizedImg.div(tf.scalar(255.0));
+      const model = await tf.loadLayersModel(
+        "./Model/new_web_model/my-model.json"
+      );
+      console.log(normalizedImg);
+      // model.predict(normalizedImg.expandDims()).print();
+      const prediction = model.predict(normalizedImg.expandDims());
+      const predictionArray = prediction.arraySync()[0];
+
+      // Format the output
+      const predictionData = [
+        { className: "ABS", probability: predictionArray[0] },
+        { className: "TRP", probability: predictionArray[1] },
+      ];
+      displayResults(predictionData);
     };
+
+    // const predictions = await model.predict(tensor);
+    // displayResults(predictions);
+    // displayResults(predictions);
+    // const model = await tf.loadLayersModel(
+    //   "./Model/tfjs_alexnet_model/model.json"
+    // );
+    // console.log(model.summary());
+    // const predictions = await model.predict(x);
+    // displayResults(predictions);
+    // };
+    // const model = await tf.loadLayersModel("./Model/Mnist/my-model.json");
+    // console.log(model.summary());
   } catch (error) {
     errorDiv.innerText =
       "Error loading or classifying image. Please try again. " + error.message;
