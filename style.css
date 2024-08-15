@@ -1,16 +1,36 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
 body {
+  font-family: "Roboto", sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
   min-height: 100vh;
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  flex-direction: column;
+  background: rgb(253, 240, 249);
+  background: linear-gradient(
+    142deg,
+    rgba(253, 240, 249, 1) 0%,
+    rgba(181, 218, 247, 1) 100%
+  );
+  background-size: cover;
   margin: 0;
 }
 .container {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  height: 100vh;
   padding: 20px;
+
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -18,11 +38,10 @@ body {
 #file-input {
   margin-bottom: 20px;
 }
-img {
+/* img {
   max-width: 100%;
   margin-top: 20px;
-  display: none;
-}
+} */
 #results {
   margin-top: 20px;
 }
@@ -38,4 +57,95 @@ img {
 }
 .error {
   color: red;
+}
+/* #myABSProgress {
+  width: 100%;
+  background-color: #ddd;
+}
+
+#myABSBar {
+  width: 1%;
+  height: 30px;
+  background-color: #04aa6d;
+}
+#myTRPProgress {
+  width: 100%;
+  background-color: #ddd;
+}
+
+#myTRPBar {
+  width: 1%;
+  height: 30px;
+  background-color: #04aa6d;
+} */
+/* ABS Progress Bar */
+.absProgress {
+  background-color: #f1f1f1; /* Lighter background for contrast */
+  border-radius: 10px; /* Rounded corners for the progress container */
+  overflow: hidden; /* Ensure the inner bar stays within the container */
+  border: 1px solid black;
+}
+
+.absBar {
+  width: 1%; /* Initial width, can be dynamically adjusted with JavaScript */
+  height: 25px;
+  /* background-color: #addfff;  */
+  text-align: center; /* Center the text inside the bar */
+  line-height: 30px; /* Vertically center the text */
+  color: rgb(0, 0, 0); /* Text color */
+  border-radius: 10px 0 0 10px; /* Rounded corners for the bar */
+  transition: width 0.5s ease-in-out; /* Smooth transition when width changes */
+}
+
+/* TRP Progress Bar */
+.trpProgress {
+  background-color: #f1f1f1; /* Lighter background for contrast */
+  border-radius: 10px; /* Rounded corners for the progress container */
+  overflow: hidden; /* Ensure the inner bar stays within the container */
+  border: 1px solid black;
+}
+
+.trpBar {
+  width: 1%; /* Initial width, can be dynamically adjusted with JavaScript */
+  height: 25px;
+  /* background-color: #addfff;  */
+  text-align: center; /* Center the text inside the bar */
+  line-height: 30px; /* Vertically center the text */
+  color: rgb(0, 0, 0); /* Text color */
+  border-radius: 10px 0 0 10px; /* Rounded corners for the bar */
+  transition: width 0.5s ease-in-out; /* Smooth transition when width changes */
+}
+
+.bg-blue {
+  background-color: #ffcccb;
+}
+.bg-orange {
+  background-color: #90ee90;
+}
+
+/* General styling for navigation links */
+.nav-link {
+  color: #000000; /* Default link color */
+  text-decoration: none; /* Remove underline */
+  padding: 10px 15px; /* Add padding */
+  font-size: 20px;
+}
+
+/* Styling for the active link */
+.nav-link.active {
+  background-color: #007bff; /* Background color for active link */
+  color: white; /* Text color for active link */
+  font-weight: bold; /* Make text bold */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+}
+
+label {
+  background-color: #90ee90;
+  color: rgb(0, 0, 0);
+  padding: 0.5rem;
+  font-family: sans-serif;
+  border-radius: 0.3rem;
+
+  cursor: pointer;
+  margin-top: 1rem;
 }

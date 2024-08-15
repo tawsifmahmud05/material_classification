@@ -5,24 +5,198 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="script.js" type="module"></script>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
     <link
       rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
 
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <title>Image Classification</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
-      <h3 class="fw-bold">Image Classification</h3>
-      <div class="row">
+      <!-- <h3 class="fw-bold" style="color: black">Image Classification</h3> -->
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item w-50">
+          <a
+            class="nav-link active"
+            data-bs-toggle="tab"
+            href="#imageTab"
+            id="imgOption"
+            ><i class="fa fa-image mx-2"></i>Image</a
+          >
+        </li>
+        <li class="nav-item w-50">
+          <a
+            class="nav-link"
+            data-bs-toggle="tab"
+            href="#videoTab"
+            id="vidOption"
+          >
+            <i class="fa fa-camera mx-2"></i> Video</a
+          >
+        </li>
+      </ul>
+
+      <!-- Tab panes -->
+      <div class="tab-content">
+        <div id="imageTab" class="tab-pane active">
+          <br />
+          <div class="row">
+            <div class="col-md-4">
+              <h5>Upload Image</h5>
+              <div id="image-section" class="d-flex">
+                <div
+                  class="input-group mb-3 mt-3 d-flex justify-content-center"
+                >
+                  <div class="input-group-prepend"></div>
+                  <div class="custom-file">
+                    <input
+                      type="file"
+                      class="custom-file-input"
+                      id="file-input"
+                      accept="image/*"
+                      hidden
+                    />
+                    <label for="file-input" class="fw-bold">Choose File</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="row d-flex justify-content-center">
+                <!-- <div>Image Preview</div> -->
+                <h5>Image Preview</h5>
+
+                <div class="col">
+                  <img
+                    id="img"
+                    src="375x500.png"
+                    style="height: 300px; width: auto"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <h5>Results</h5>
+              <div class="row justify-content-center">
+                <div class="loading fw-bold" id="loading">Classifying...</div>
+                <div id="imageResult">
+                  <div id="myImgABSProgress" class="absProgress">
+                    <div id="myImgABSBar" class="absBar fw-bold">ABS</div>
+                  </div>
+                  <br />
+                  <div id="myImgTRPProgress" class="trpProgress">
+                    <div id="myImgTRPBar" class="trpBar fw-bold">TRP</div>
+                  </div>
+                </div>
+                <div class="error" id="error"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="videoTab" class="tab-pane fade">
+          <br />
+          <div class="row">
+            <div class="col-md-4">
+              <div class="d-flex justify-content-between">
+                <h5>Video</h5>
+
+                <div>
+                  <button id="startVideoBtn" class="btn btn-sm bg-orange">
+                    Start
+                  </button>
+                  <button
+                    id="stopVideoBtn"
+                    class="btn btn-sm bg-blue"
+                    style="display: none"
+                  >
+                    Stop
+                  </button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <div id="video-section">
+                    <div class="row">
+                      <video
+                        id="video"
+                        width="auto"
+                        height="200px"
+                        autoplay
+                      ></video>
+                    </div>
+
+                    <div class="row d-flex justify-content-center mt-3">
+                      <button class="btn bg-orange m-1" id="capture">
+                        Capture
+                      </button>
+                      <button
+                        class="btn bg-blue m-1"
+                        id="reset"
+                        style="display: none"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="row d-flex justify-content-center">
+                <h5>Image Preview</h5>
+
+                <div class="col">
+                  <canvas id="canvas" style="display: none"></canvas>
+                  <img
+                    id="imgVideo"
+                    src="375x500.png"
+                    style="height: 200px; width: auto"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <h5>Results</h5>
+
+              <div class="row justify-content-center">
+                <div class="loading fw-bold" id="loading">Classifying...</div>
+                <div id="videoResult">
+                  <div id="myVidABSProgress" class="absProgress">
+                    <div id="myVidABSBar" class="absBar fw-bold">ABS</div>
+                  </div>
+                  <br />
+                  <div id="myVidTRPProgress" class="trpProgress">
+                    <div id="myVidTRPBar" class="trpBar fw-bold">TRP</div>
+                  </div>
+                </div>
+                <div class="error" id="error"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="row">
         <div class="d-flex justify-content-center w-100">
           <button class="btn btn-info m-1" id="image-button">Image</button>
           <button class="btn btn-success m-1" id="video-button">Video</button>
         </div>
-      </div>
+      </div> 
       <div class="row">
         <div class="col-md-6">
           <div class="row">
@@ -71,7 +245,15 @@
             <div class="error" id="error"></div>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
   </body>
+  <script type="text/javascript">
+    function selectNavMenu(toBeActiveMenuId, toBeInactiveMenuId) {
+      let toBeActiveMenu = document.getElementById(toBeActiveMenuId);
+      let toBeInactiveMenu = document.getElementById(toBeInactiveMenuId);
+      toBeInactiveMenu.classList.remove("active");
+      toBeActiveMenu.classList.add("active");
+    }
+  </script>
 </html>
