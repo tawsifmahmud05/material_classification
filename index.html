@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="script.js" type="module"></script>
+    <script
+      async
+      src="https://docs.opencv.org/4.5.4/opencv.js"
+      type="text/javascript"
+    ></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,8 +32,6 @@
   </head>
   <body>
     <div class="container">
-      <!-- <h3 class="fw-bold" style="color: black">Image Classification</h3> -->
-      <!-- Nav tabs -->
       <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item w-50">
           <a
@@ -81,6 +85,10 @@
                 <h5>Image Preview</h5>
 
                 <div class="col">
+                  <canvas
+                    id="new-canvas"
+                    style="height: 300px; width: auto"
+                  ></canvas>
                   <img
                     id="img"
                     src="375x500.png"
@@ -131,13 +139,18 @@
               <div class="row">
                 <div class="col-md-12">
                   <div id="video-section">
-                    <div class="row">
+                    <div class="row d-flex justify-content-center">
                       <video
                         id="video"
                         width="auto"
                         height="200px"
                         autoplay
+                        muted
                       ></video>
+                      <canvas
+                        id="thresCanvas"
+                        style="height: 200px; width: auto"
+                      ></canvas>
                     </div>
 
                     <div class="row d-flex justify-content-center mt-3">
@@ -248,12 +261,4 @@
       </div> -->
     </div>
   </body>
-  <script type="text/javascript">
-    function selectNavMenu(toBeActiveMenuId, toBeInactiveMenuId) {
-      let toBeActiveMenu = document.getElementById(toBeActiveMenuId);
-      let toBeInactiveMenu = document.getElementById(toBeInactiveMenuId);
-      toBeInactiveMenu.classList.remove("active");
-      toBeActiveMenu.classList.add("active");
-    }
-  </script>
 </html>
