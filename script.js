@@ -1,49 +1,50 @@
+const imgOption = document.getElementById("imgOption");
+const vidOption = document.getElementById("vidOption");
+
 const img = document.getElementById("img");
 const imgVideo = document.getElementById("imgVideo");
 const fileInput = document.getElementById("file-input");
+
 const imageResultsDiv = document.getElementById("imageResult");
 const videoResultsDiv = document.getElementById("videoResult");
 
 const loadingDiv = document.getElementById("loading");
 const errorDiv = document.getElementById("error");
 
-const imgOption = document.getElementById("imgOption");
-const vidOption = document.getElementById("vidOption");
 const StartVideoButton = document.getElementById("startVideoBtn");
 const StopVideoButton = document.getElementById("stopVideoBtn");
-
-// const imageSection = document.getElementById("image-section");
-// const videoSection = document.getElementById("video-section");
-
+const resetButton = document.getElementById("reset");
 const captureButton = document.getElementById("capture");
+
 const video = document.getElementById("video");
 const threscanvas = document.getElementById("thresCanvas");
 const canvas = document.getElementById("canvas");
-const resetButton = document.getElementById("reset");
 
 let videoStream;
 
+// ImageTab Onclick
 imgOption.addEventListener("click", () => {
   captureButton.style.display = "block";
   video.style.display = "block";
   resetButton.style.display = "none";
-
   imgVideo.src = "375x500.png";
-  // Format the output
+
   const predictionData = [
     { className: "ABS", probability: 0 },
     { className: "TRP", probability: 0 },
   ];
+
   updateProgressBars(predictionData, "Vid");
-  stopVideoClassification();
+
   stopVideoStream();
+
   StopVideoButton.style.display = "none";
   StartVideoButton.style.display = "block";
 });
 
+// VideoTab Onclick
 vidOption.addEventListener("click", () => {
   img.src = "375x500.png";
-  // Format the output
   const predictionData = [
     { className: "ABS", probability: 0 },
     { className: "TRP", probability: 0 },
@@ -51,19 +52,22 @@ vidOption.addEventListener("click", () => {
   updateProgressBars(predictionData, "Img");
 });
 
+// StopVideo Onclick
 StopVideoButton.addEventListener("click", () => {
   StopVideoButton.style.display = "none";
   StartVideoButton.style.display = "block";
-  stopVideoClassification();
+
   stopVideoStream();
 });
 
+// StartVideo Onclick
 StartVideoButton.addEventListener("click", () => {
   StartVideoButton.style.display = "none";
   StopVideoButton.style.display = "block";
   startVideoStream();
 });
 
+// file input change
 fileInput.addEventListener("change", (event) => {
   const file = event.target.files[0];
   const reader = new FileReader();
@@ -73,67 +77,13 @@ fileInput.addEventListener("change", (event) => {
     img.src = e.target.result;
     img.style.height = "300px";
     img.style.width = "auto";
-    // console.log(cv.imread(img));
     otsuThreshold(image);
-    classifyImage();
+    classify(img, "Img");
   };
   reader.readAsDataURL(file);
 });
 
-async function classifyImage() {
-  errorDiv.innerHTML = "";
-  loadingDiv.style.display = "block";
-
-  try {
-    const image = new Image();
-    image.src = img.src;
-    image.onload = async () => {
-      const tensor = tf.browser.fromPixels(image, 3);
-      const resizedImg = tf.image.resizeBilinear(tensor, [28, 28]);
-      const normalizedImg = resizedImg.div(tf.scalar(255.0));
-      const model = await tf.loadLayersModel(
-        "./Model/new_web_model_Trp/my-model.json"
-      );
-      const prediction = model.predict(normalizedImg.expandDims());
-      const predictionArray = prediction.arraySync()[0];
-
-      // Format the output
-      const predictionData = [
-        { className: "ABS", probability: predictionArray[0] },
-        { className: "TRP", probability: predictionArray[1] },
-      ];
-      updateProgressBars(predictionData, "Img");
-    };
-  } catch (error) {
-    errorDiv.innerText =
-      "Error loading or classifying image. Please try again. " + error.message;
-  } finally {
-    loadingDiv.style.display = "none";
-  }
-}
-
-function updateProgressBars(predictionData, txt) {
-  predictionData.forEach((prediction) => {
-    const progressBar = document.getElementById(
-      `my${txt}${prediction.className}Bar`
-    );
-    const probabilityPercentage = prediction.probability * 100;
-
-    // Update the width and inner text of the progress bar
-    progressBar.style.width = `${probabilityPercentage}%`;
-    progressBar.textContent = `${
-      prediction.className
-    } (${probabilityPercentage.toFixed(2)}%)`;
-
-    // Change background color based on probability
-    if (probabilityPercentage > 50) {
-      progressBar.style.backgroundColor = "#90ee90"; // Light green
-    } else {
-      progressBar.style.backgroundColor = "#ffcccb"; // Light red
-    }
-  });
-}
-
+// Caotyre Onclick
 captureButton.addEventListener("click", () => {
   capturePhoto();
   captureButton.style.display = "none";
@@ -141,25 +91,47 @@ captureButton.addEventListener("click", () => {
   resetButton.style.display = "block";
 });
 
+// reset video page
 resetButton.addEventListener("click", () => {
   captureButton.style.display = "block";
   video.style.display = "block";
   resetButton.style.display = "none";
   imgVideo.src = "375x500.png";
-  // Format the output
   const predictionData = [
     { className: "ABS", probability: 0 },
     { className: "TRP", probability: 0 },
   ];
-  // displayResults(predictionData);
   updateProgressBars(predictionData, "Vid");
 });
 
+// Updating progress bar
+function updateProgressBars(predictionData, txt) {
+  predictionData.forEach((prediction) => {
+    const progressBar = document.getElementById(
+      `my${txt}${prediction.className}Bar`
+    );
+    const probabilityPercentage = prediction.probability * 100;
+
+    progressBar.style.width = `${probabilityPercentage}%`;
+    progressBar.textContent = `${
+      prediction.className
+    } (${probabilityPercentage.toFixed(2)}%)`;
+
+    if (probabilityPercentage > 50) {
+      progressBar.style.backgroundColor = "#90ee90";
+    } else {
+      progressBar.style.backgroundColor = "#ffcccb";
+    }
+  });
+}
+
+// Front and Rare based on device
 function getFacingMode() {
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   return isMobile ? "environment" : "user";
 }
 
+// Start video stream
 async function startVideoStream() {
   try {
     const constraints = {
@@ -202,7 +174,6 @@ async function startVideoStream() {
       src.delete();
       dst.delete();
 
-      // Process the next frame
       requestAnimationFrame(processFrame);
     }
 
@@ -212,11 +183,7 @@ async function startVideoStream() {
   }
 }
 
-function stopVideoClassification() {
-  errorDiv.innerHTML = ""; // Clear previous errors
-  stopVideoStream();
-}
-
+// Stop video stream
 function stopVideoStream() {
   if (videoStream) {
     const tracks = videoStream.getTracks();
@@ -226,22 +193,23 @@ function stopVideoStream() {
   video.srcObject = null;
 }
 
+// Photo capture from video stream
 function capturePhoto() {
   const context = canvas.getContext("2d");
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   const dataURL = canvas.toDataURL("image/png");
   imgVideo.src = dataURL;
 
-  classifyImageFromCanvas();
+  classify(imgVideo, "Vid");
 }
 
-async function classifyImageFromCanvas() {
-  errorDiv.innerHTML = ""; // Clear previous errors
+// Classify Image
+async function classify(element, eleName) {
+  errorDiv.innerHTML = "";
   loadingDiv.style.display = "block";
-
   try {
     const image = new Image();
-    image.src = imgVideo.src;
+    image.src = element.src;
     image.onload = async () => {
       const tensor = tf.browser.fromPixels(image, 3);
       const resizedImg = tf.image.resizeBilinear(tensor, [28, 28]);
@@ -252,13 +220,11 @@ async function classifyImageFromCanvas() {
       const prediction = model.predict(normalizedImg.expandDims());
       const predictionArray = prediction.arraySync()[0];
 
-      // Format the output
       const predictionData = [
         { className: "ABS", probability: predictionArray[0] },
         { className: "TRP", probability: predictionArray[1] },
       ];
-      console.log(predictionData);
-      updateProgressBars(predictionData, "Vid");
+      updateProgressBars(predictionData, eleName);
     };
   } catch (error) {
     errorDiv.innerText =
@@ -268,24 +234,21 @@ async function classifyImageFromCanvas() {
   }
 }
 
+// Applying Therhold to Image Data
 function otsuThreshold(img) {
-  // Create source and destination Mat objects
   let src = cv.imread(img);
   let dst = new cv.Mat();
   let canvas = document.getElementById("new-canvas");
+
   canvas.width = img.width / 2;
   canvas.height = img.height / 2;
 
-  // Convert the image to grayscale
   cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY);
 
-  // Apply Otsu's thresholding
   cv.threshold(src, dst, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
 
-  // Display the result on the canvas
   cv.imshow("new-canvas", dst);
 
-  // Clean up
   src.delete();
   dst.delete();
 }
