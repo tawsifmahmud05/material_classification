@@ -56,6 +56,7 @@ vidOption.addEventListener("click", () => {
 
 // StopVideo Onclick
 StopVideoButton.addEventListener("click", () => {
+  threscanvas.style.display = "none";
   StopVideoButton.style.display = "none";
   StartVideoButton.style.display = "block";
 
@@ -64,6 +65,7 @@ StopVideoButton.addEventListener("click", () => {
 
 // StartVideo Onclick
 StartVideoButton.addEventListener("click", () => {
+  threscanvas.style.display = "block";
   StartVideoButton.style.display = "none";
   StopVideoButton.style.display = "block";
   startVideoStream();
@@ -173,8 +175,8 @@ async function startVideoStream() {
       }
       ctx.drawImage(video, 0, 0, threscanvas.width, threscanvas.height);
 
-      performWaveletLikeDecomposition(threscanvas, "thresCanvas");
-      // otsuThreshold(threscanvas, "thresCanvas");
+      // performWaveletLikeDecomposition(threscanvas, "thresCanvas");
+      otsuThreshold(threscanvas, "thresCanvas");
       // threscanvas.style.display = "block";
       requestAnimationFrame(processFrame);
     }
@@ -237,7 +239,7 @@ async function classify(element, eleName) {
 }
 
 // Applying Therhold to Image Data
-function otsuThreshold(img, canvasName) {
+async function otsuThreshold(img, canvasName) {
   let src = cv.imread(img);
   let gray = new cv.Mat();
   let lbp = new cv.Mat();
@@ -255,8 +257,20 @@ function otsuThreshold(img, canvasName) {
   cv.threshold(lbp, dst, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
 
   cv.imshow(canvasName, dst);
+  const templateUrl1 = "target_patch/raw_abs_target.PNG";
+  const templateUrl2 = "target_patch/raw_trp_target.PNG";
+  let template1 = await loadImage(templateUrl1);
+  let template2 = await loadImage(templateUrl2);
+  try {
+    // templateMatching(src, template);
+    // orbMatching(src, template);
+    orbMatchingWithTwoTemplates(src, template1, template2);
+  } catch (e) {
+    console.log("Error: " + e.message);
+  }
 
-  src.delete();
+  // template.delete();
+  // src.delete();
   gray.delete();
   lbp.delete();
   dst.delete();
@@ -342,7 +356,303 @@ function performWaveletLikeDecomposition(img, canvasName) {
   HH.delete();
 }
 
-// function displayResult(mat, canvas) {
-//   cv.imshow(canvas.id, mat);
-//   mat.delete();
+// function templateMatching(image, template) {
+//   // Load images into OpenCV
+//   let src = image;
+//   let templ = template;
+//   let dst = new cv.Mat();
+//   let mask = new cv.Mat();
+
+//   // Convert images to grayscale for better matching
+//   cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY);
+//   cv.cvtColor(templ, templ, cv.COLOR_RGBA2GRAY);
+
+//   // Define scaling and rotation factors to test
+//   let scales = [0.5, 1.0, 1.5, 2.0]; // Example scale factors
+//   let rotations = [0, 45, 90, 135]; // Example rotation angles (in degrees)
+//   let bestMatch = {
+//     scale: 1.0,
+//     rotation: 0,
+//     point: null,
+//     value: -1,
+//     size: null,
+//   };
+
+//   for (let scale of scales) {
+//     for (let rotation of rotations) {
+//       // Scale the template
+//       let scaledTempl = new cv.Mat();
+//       let newSize = new cv.Size(templ.cols * scale, templ.rows * scale);
+//       cv.resize(templ, scaledTempl, newSize, 0, 0, cv.INTER_CUBIC);
+
+//       // Rotate the template
+//       let rotatedTempl = new cv.Mat();
+//       let center = new cv.Point(scaledTempl.cols / 2, scaledTempl.rows / 2);
+//       let rotationMatrix = cv.getRotationMatrix2D(center, rotation, 1);
+//       cv.warpAffine(
+//         scaledTempl,
+//         rotatedTempl,
+//         rotationMatrix,
+//         newSize,
+//         cv.INTER_LINEAR,
+//         cv.BORDER_CONSTANT,
+//         new cv.Scalar()
+//       );
+
+//       // Perform template matching
+//       cv.matchTemplate(src, rotatedTempl, dst, cv.TM_CCOEFF_NORMED, mask);
+//       let result = cv.minMaxLoc(dst, mask);
+
+//       // Get match details
+//       let maxPoint = result.maxLoc;
+//       let maxVal = result.maxVal;
+
+//       // Check if this is the best match so far
+//       if (maxVal > bestMatch.value) {
+//         bestMatch = {
+//           scale: scale,
+//           rotation: rotation,
+//           point: maxPoint,
+//           value: maxVal,
+//           size: newSize,
+//         };
+//       }
+
+//       // Clean up matrices
+//       scaledTempl.delete();
+//       rotatedTempl.delete();
+//     }
+//   }
+
+//   // Draw rectangle around the best match
+//   if (bestMatch.point) {
+//     let color = new cv.Scalar(255, 0, 0, 255); // Red color
+//     let point = new cv.Point(
+//       bestMatch.point.x + bestMatch.size.width,
+//       bestMatch.point.y + bestMatch.size.height
+//     );
+//     console.log(bestMatch.value);
+//     cv.rectangle(src, bestMatch.point, point, color, 2, cv.LINE_8, 0);
+//   }
+
+//   // Display result
+//   cv.imshow("new-canvas", src);
+
+//   // Clean up
+//   src.delete();
+//   templ.delete();
+//   dst.delete();
+//   mask.delete();
 // }
+console.log("done");
+// function orbMatching(image, template) {
+//   // Load images into OpenCV
+//   let src = image;
+//   let templ = template;
+
+//   // Convert images to grayscale for better keypoint detection
+//   cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY);
+//   cv.cvtColor(templ, templ, cv.COLOR_RGBA2GRAY);
+
+//   // Initialize ORB detector
+//   let orb = new cv.ORB();
+
+//   // Detect ORB keypoints and descriptors
+//   let keypoints1 = new cv.KeyPointVector();
+//   let keypoints2 = new cv.KeyPointVector();
+//   let descriptors1 = new cv.Mat();
+//   let descriptors2 = new cv.Mat();
+
+//   orb.detectAndCompute(src, new cv.Mat(), keypoints1, descriptors1);
+//   orb.detectAndCompute(templ, new cv.Mat(), keypoints2, descriptors2);
+
+//   // Match descriptors using BFMatcher (Brute Force)
+//   let bf = new cv.BFMatcher(cv.NORM_HAMMING, true);
+//   let matches = new cv.DMatchVector();
+//   bf.match(descriptors1, descriptors2, matches);
+
+//   // Draw keypoints on the images
+//   let outputImage = new cv.Mat();
+//   cv.drawMatches(src, keypoints1, templ, keypoints2, matches, outputImage);
+//   // Count total matches
+//   let totalMatches = matches.size();
+//   console.log(`Total matches: ${totalMatches}`);
+//   // Display the result
+//   cv.imshow("new-canvas", outputImage);
+
+//   // Clean up
+//   src.delete();
+//   templ.delete();
+//   keypoints1.delete();
+//   keypoints2.delete();
+//   descriptors1.delete();
+//   descriptors2.delete();
+//   matches.delete();
+//   outputImage.delete();
+//   // // Load images into OpenCV
+//   // let src = image;
+//   // let templ = template;
+//   // let dst = new cv.Mat();
+
+//   // // Convert images to grayscale for better matching
+//   // cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY);
+//   // cv.cvtColor(templ, templ, cv.COLOR_RGBA2GRAY);
+
+//   // // Initialize ORB detector
+//   // let orb = new cv.ORB();
+
+//   // // Detect ORB keypoints and descriptors
+//   // let keypoints1 = new cv.KeyPointVector();
+//   // let keypoints2 = new cv.KeyPointVector();
+//   // let descriptors1 = new cv.Mat();
+//   // let descriptors2 = new cv.Mat();
+
+//   // orb.detectAndCompute(src, new cv.Mat(), keypoints1, descriptors1);
+//   // orb.detectAndCompute(templ, new cv.Mat(), keypoints2, descriptors2);
+
+//   // // Match descriptors using BFMatcher (Brute Force)
+//   // let bf = new cv.BFMatcher(cv.NORM_HAMMING, true);
+//   // let matches = new cv.DMatchVector();
+//   // bf.match(descriptors1, descriptors2, matches);
+
+//   // // Find the best match location
+//   // let goodMatches = [];
+//   // for (let i = 0; i < matches.size(); i++) {
+//   //   goodMatches.push(matches.get(i));
+//   // }
+//   // goodMatches.sort((a, b) => a.distance - b.distance);
+
+//   // // Draw the matches on the output image
+//   // cv.drawMatches(src, keypoints1, templ, keypoints2, goodMatches, dst);
+
+//   // // Draw the rectangle around the best match
+//   // // if (goodMatches.length > 0) {
+//   // //   let bestMatch = goodMatches[0];
+//   // //   let maxPoint = keypoints1.get(bestMatch.queryIdx).pt;
+//   // //   let point = new cv.Point(maxPoint.x + templ.cols, maxPoint.y + templ.rows);
+//   // //   let color = new cv.Scalar(255, 0, 0, 255); // Red color
+//   // //   cv.rectangle(src, maxPoint, point, color, 2, cv.LINE_8, 0);
+//   // // }
+
+//   // // Display the result
+//   // cv.imshow("new-canvas", dst);
+
+//   // // Clean up
+//   // dst.delete();
+//   // src.delete();
+//   // templ.delete();
+//   // keypoints1.delete();
+//   // keypoints2.delete();
+//   // descriptors1.delete();
+//   // descriptors2.delete();
+//   // matches.delete();
+// }
+function orbMatchingWithTwoTemplates(image, template1, template2) {
+  // Load images into OpenCV
+  let src = image;
+  let templ1 = template1;
+  let templ2 = template2;
+
+  // Convert images to grayscale for better matching
+  cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY);
+  cv.cvtColor(templ1, templ1, cv.COLOR_RGBA2GRAY);
+  cv.cvtColor(templ2, templ2, cv.COLOR_RGBA2GRAY);
+
+  // Initialize ORB detector
+  let orb = new cv.ORB();
+
+  // Detect ORB keypoints and descriptors for the main image
+  let keypointsSrc = new cv.KeyPointVector();
+  let descriptorsSrc = new cv.Mat();
+  orb.detectAndCompute(src, new cv.Mat(), keypointsSrc, descriptorsSrc);
+
+  // Function to match and draw keypoints for a single template
+  function matchAndDrawTemplate(templ, color) {
+    let keypointsTempl = new cv.KeyPointVector();
+    let descriptorsTempl = new cv.Mat();
+    orb.detectAndCompute(templ, new cv.Mat(), keypointsTempl, descriptorsTempl);
+
+    let bf = new cv.BFMatcher(cv.NORM_HAMMING, true);
+    let matches = new cv.DMatchVector();
+    bf.match(descriptorsSrc, descriptorsTempl, matches);
+
+    // Draw matches
+    let outputImage = new cv.Mat();
+    cv.drawMatches(
+      src,
+      keypointsSrc,
+      templ,
+      keypointsTempl,
+      matches,
+      outputImage,
+      color,
+      new cv.Scalar(0, 255, 0, 255)
+    );
+
+    // Return the drawn image
+    return outputImage;
+  }
+
+  // Draw matches for both templates
+  let outputImage1 = matchAndDrawTemplate(
+    templ1,
+    new cv.Scalar(255, 0, 0, 255)
+  ); // Red color for template 1
+  let outputImage2 = matchAndDrawTemplate(
+    templ2,
+    new cv.Scalar(0, 255, 0, 255)
+  ); // Green color for template 2
+
+  // Combine images vertically
+  let combinedImage = new cv.Mat();
+  let rows = outputImage1.rows + outputImage2.rows;
+  let cols = Math.max(outputImage1.cols, outputImage2.cols);
+  combinedImage.create(rows, cols, outputImage1.type());
+
+  // Copy the first image into the top portion of the combined image
+  outputImage1.copyTo(
+    combinedImage.rowRange(0, outputImage1.rows).colRange(0, outputImage1.cols)
+  );
+
+  // Copy the second image into the bottom portion of the combined image
+  outputImage2.copyTo(
+    combinedImage
+      .rowRange(outputImage1.rows, rows)
+      .colRange(0, outputImage2.cols)
+  );
+
+  // Display the result
+  cv.imshow("new-canvas", combinedImage);
+
+  // Clean up
+  src.delete();
+  templ1.delete();
+  templ2.delete();
+  keypointsSrc.delete();
+  descriptorsSrc.delete();
+  outputImage1.delete();
+  outputImage2.delete();
+  combinedImage.delete();
+}
+
+async function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const imgTemp = new Image();
+    imgTemp.crossOrigin = "Anonymous"; // Handle CORS issues
+    imgTemp.onload = () => {
+      // Create a canvas to draw the image
+      const canvasTemp = document.createElement("canvas");
+      canvasTemp.width = imgTemp.width;
+      canvasTemp.height = imgTemp.height;
+      const ctx = canvasTemp.getContext("2d");
+      ctx.drawImage(imgTemp, 0, 0);
+
+      // Convert image data to OpenCV.js Mat
+      const imageData = ctx.getImageData(0, 0, imgTemp.width, imgTemp.height);
+      const mat = cv.matFromImageData(imageData);
+      resolve(mat);
+    };
+    imgTemp.onerror = (error) => reject(error);
+    imgTemp.src = url;
+  });
+}
