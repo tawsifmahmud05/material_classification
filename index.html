@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="script.js" type="module"></script>
+    <script src="JS/script.js" type="module"></script>
     <script
       async
       src="https://docs.opencv.org/4.5.4/opencv.js"
@@ -120,7 +120,7 @@
             <div class="col-md-4">
               <div class="d-flex justify-content-between">
                 <h5>Video</h5>
-                <div>
+                <!-- <div>
                   <button id="startVideoBtn" class="btn btn-sm bg-orange">
                     Start
                   </button>
@@ -131,7 +131,7 @@
                   >
                     Stop
                   </button>
-                </div>
+                </div> -->
               </div>
               <div class="row">
                 <div class="col-md-12">
@@ -151,7 +151,17 @@
                     </div>
 
                     <div class="row d-flex justify-content-center mt-3">
-                      <button class="btn bg-orange m-1" id="capture">
+                      <button id="startVideoBtn" class="btn bg-orange w-100">
+                        Start
+                      </button>
+                      <button
+                        id="stopVideoBtn"
+                        class="btn bg-blue w-100"
+                        style="display: none"
+                      >
+                        Stop
+                      </button>
+                      <!-- <button class="btn bg-orange m-1" id="capture">
                         Capture
                       </button>
                       <button
@@ -160,7 +170,7 @@
                         style="display: none"
                       >
                         Reset
-                      </button>
+                      </button> -->
                     </div>
                   </div>
                 </div>
