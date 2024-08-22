@@ -2,6 +2,35 @@ import { applyLBP } from "./applyLBP.js";
 import { orbMatchingWithTwoTemplates } from "./orbMatching.js";
 import { updateProgressBars } from "./updateProgress.js";
 import { getFacingMode } from "./utils.js";
+
+const imgOption = document.getElementById("imgOption");
+const vidOption = document.getElementById("vidOption");
+
+const img = document.getElementById("img");
+const imgVideo = document.getElementById("imgVideo");
+const fileInput = document.getElementById("file-input");
+
+const loadingDiv = document.getElementById("loading");
+const errorDiv = document.getElementById("error");
+
+const StartVideoButton = document.getElementById("startVideoBtn");
+const StopVideoButton = document.getElementById("stopVideoBtn");
+
+const video = document.getElementById("video");
+const threscanvas = document.getElementById("thresCanvas");
+const canvas = document.getElementById("canvas");
+
+const templateUrl1 = "target_patch/raw_abs_target.PNG";
+const templateUrl2 = "target_patch/raw_trp_target.PNG";
+
+let stream;
+
+let results;
+
+const model = await tf.loadLayersModel(
+  "./Model/new_web_model_Trp/my-model.json"
+);
+
 function waitForOpenCV() {
   let checkInterval = setInterval(() => {
     if (cv && cv.Mat) {
@@ -14,36 +43,6 @@ function waitForOpenCV() {
 
 // Start waiting for OpenCV.js to load
 waitForOpenCV();
-const imgOption = document.getElementById("imgOption");
-const vidOption = document.getElementById("vidOption");
-
-const img = document.getElementById("img");
-const imgVideo = document.getElementById("imgVideo");
-const fileInput = document.getElementById("file-input");
-
-const imageResultsDiv = document.getElementById("imageResult");
-const videoResultsDiv = document.getElementById("videoResult");
-
-const loadingDiv = document.getElementById("loading");
-const errorDiv = document.getElementById("error");
-
-const StartVideoButton = document.getElementById("startVideoBtn");
-const StopVideoButton = document.getElementById("stopVideoBtn");
-
-const video = document.getElementById("video");
-const threscanvas = document.getElementById("thresCanvas");
-const canvas = document.getElementById("canvas");
-
-let videoStream;
-
-const templateUrl1 = "target_patch/raw_abs_target.PNG";
-const templateUrl2 = "target_patch/raw_trp_target.PNG";
-let template1;
-let template2;
-
-const model = await tf.loadLayersModel(
-  "./Model/new_web_model_Trp/my-model.json"
-);
 
 // ImageTab Onclick
 imgOption.addEventListener("click", () => {
@@ -116,23 +115,33 @@ async function startVideoStream() {
       },
     };
     const ctx = threscanvas.getContext("2d");
-    navigator.mediaDevices
-      .getUserMedia(constraints)
-      .then(function (videoStream) {
-        video.srcObject = videoStream;
 
-        video.addEventListener("loadedmetadata", () => {
-          canvas.width = video.videoWidth / 2;
-          canvas.height = video.videoHeight / 2;
-          threscanvas.width = video.videoWidth;
-          threscanvas.height = video.videoHeight;
+    // Clean up any previous video stream and event listeners
+    if (video.srcObject) {
+      const stream = video.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop());
+      video.srcObject = null;
+    }
 
-          processFrame();
-        });
-      })
-      .catch(function (err) {
-        console.log("An error occurred: " + err);
-      });
+    // Remove previous event listener if any
+    video.removeEventListener("loadedmetadata", onLoadedMetadata);
+
+    // Define the event listener for loadedmetadata
+    function onLoadedMetadata() {
+      canvas.width = video.videoWidth / 2;
+      canvas.height = video.videoHeight / 2;
+      threscanvas.width = video.videoWidth;
+      threscanvas.height = video.videoHeight;
+
+      processFrame();
+    }
+
+    video.addEventListener("loadedmetadata", onLoadedMetadata);
+
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    video.play();
 
     function processFrame() {
       if (video.paused || video.ended) {
@@ -143,29 +152,27 @@ async function startVideoStream() {
       // performWaveletLikeDecomposition(threscanvas, "thresCanvas");
       otsuThreshold(threscanvas, "thresCanvas");
       localStorage.clear();
-
-      // Clear Session Storage
       sessionStorage.clear();
-      // threscanvas.style.display = "block";
+
       requestAnimationFrame(processFrame);
     }
-
-    video.play();
   } catch (error) {
     errorDiv.innerText = "Error accessing video stream. Please try again.";
   }
 }
 
-// Stop video stream
 function stopVideoStream() {
-  if (videoStream) {
-    const tracks = videoStream.getTracks();
-    tracks.forEach((track) => track.stop());
-  }
   const video = document.getElementById("video");
-  video.srcObject = null;
-}
+  if (video && video.srcObject) {
+    // Stop all tracks of the stream
+    const stream = video.srcObject;
+    const tracks = stream.getTracks();
+    tracks.forEach((track) => track.stop());
 
+    // Clear the video source
+    video.srcObject = null;
+  }
+}
 // Photo capture from video stream
 function capturePhoto() {
   const context = canvas.getContext("2d");
@@ -176,26 +183,41 @@ function capturePhoto() {
   classify(imgVideo, "Vid");
 }
 
-// Classify Image
 async function classify(element, eleName) {
   errorDiv.innerHTML = "";
   loadingDiv.style.display = "block";
   try {
     const image = new Image();
     image.src = element.src;
+
     image.onload = async () => {
-      const tensor = tf.browser.fromPixels(image, 3);
-      const resizedImg = tf.image.resizeBilinear(tensor, [28, 28]);
-      const normalizedImg = resizedImg.div(tf.scalar(255.0));
+      try {
+        const tensor = tf.browser.fromPixels(image, 3);
+        const resizedImg = tf.image.resizeBilinear(tensor, [28, 28]);
+        const normalizedImg = resizedImg.div(tf.scalar(255.0));
 
-      const prediction = model.predict(normalizedImg.expandDims());
-      const predictionArray = prediction.arraySync()[0];
+        // Predict using the model
+        const prediction = model.predict(normalizedImg.expandDims());
+        const predictionArray = prediction.arraySync()[0];
 
-      const predictionData = [
-        { className: "ABS", probability: predictionArray[0] },
-        { className: "TRP", probability: predictionArray[1] },
-      ];
-      updateProgressBars(predictionData, eleName);
+        // Dispose of tensors to free memory
+        tensor.dispose();
+        resizedImg.dispose();
+        normalizedImg.dispose();
+        prediction.dispose();
+
+        const predictionData = [
+          { className: "ABS", probability: predictionArray[0] },
+          { className: "TRP", probability: predictionArray[1] },
+        ];
+        updateProgressBars(predictionData, eleName);
+      } catch (predictError) {
+        errorDiv.innerText = "Error during prediction: " + predictError.message;
+      }
+    };
+
+    image.onerror = () => {
+      throw new Error("Error loading the image.");
     };
   } catch (error) {
     errorDiv.innerText =
@@ -208,15 +230,14 @@ async function classify(element, eleName) {
 // Applying Therhold to Image Data
 async function otsuThreshold(img, canvasName) {
   let src = cv.imread(img);
+  let template1 = await loadImage(templateUrl1);
+  let template2 = await loadImage(templateUrl2);
 
-  template1 = await loadImage(templateUrl1);
-  template2 = await loadImage(templateUrl2);
   try {
-    let results = orbMatchingWithTwoTemplates(src, template1, template2);
-    if (
-      results.matchesTemplate1.size() + results.matchesTemplate2.size() >
-      160
-    ) {
+    // results = await orbMatchingWithTwoTemplates(src, template1, template2);
+    results = await orbMatchingWithTwoTemplates(src, template1, template2);
+    console.log(results);
+    if (results.matchesKeypointTemp1 + results.matchesKeypointTemp2 > 160) {
       if (canvasName == "thresCanvas") {
         threscanvas.style.display = "none";
         capturePhoto();
@@ -224,14 +245,12 @@ async function otsuThreshold(img, canvasName) {
       } else {
         classify(img, "Img");
       }
+    } else {
+      console.log("Non-detected");
     }
-    results.combinedImage.delete();
-    results.matchesTemplate1.delete();
-    results.matchesTemplate2.delete();
   } catch (e) {
     console.log("Error: " + e.message);
   } finally {
-    src.delete();
   }
 }
 
