@@ -35,8 +35,12 @@ export function orbMatchingWithTwoTemplates(image, template1, template2) {
       new cv.Scalar(0, 255, 0, 255)
     );
 
+    keypointsTempl.delete();
+    descriptorsTempl.delete();
+    bf.delete();
+
     return {
-      matches: matches.size(),
+      matches: matches,
       outputImage: outputImage,
     };
   }
@@ -62,6 +66,12 @@ export function orbMatchingWithTwoTemplates(image, template1, template2) {
       .rowRange(0, result2.outputImage.rows)
       .colRange(result1.outputImage.cols, cols)
   );
+
+  result1.outputImage.delete();
+  result2.outputImage.delete();
+  descriptorsSrc.delete();
+  keypointsSrc.delete();
+  orb.delete();
 
   // Return the number of matches and the combined image
   return {

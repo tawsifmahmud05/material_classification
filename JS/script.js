@@ -2,7 +2,18 @@ import { applyLBP } from "./applyLBP.js";
 import { orbMatchingWithTwoTemplates } from "./orbMatching.js";
 import { updateProgressBars } from "./updateProgress.js";
 import { getFacingMode } from "./utils.js";
+function waitForOpenCV() {
+  let checkInterval = setInterval(() => {
+    if (cv && cv.Mat) {
+      // Check if OpenCV.js is ready
+      clearInterval(checkInterval); // Stop checking
+      console.log("OpenCV.js is loaded and ready to use.");
+    }
+  }, 100); // Check every 100ms
+}
 
+// Start waiting for OpenCV.js to load
+waitForOpenCV();
 const imgOption = document.getElementById("imgOption");
 const vidOption = document.getElementById("vidOption");
 
@@ -18,8 +29,6 @@ const errorDiv = document.getElementById("error");
 
 const StartVideoButton = document.getElementById("startVideoBtn");
 const StopVideoButton = document.getElementById("stopVideoBtn");
-// const resetButton = document.getElementById("reset");
-// const captureButton = document.getElementById("capture");
 
 const video = document.getElementById("video");
 const threscanvas = document.getElementById("thresCanvas");
@@ -27,12 +36,19 @@ const canvas = document.getElementById("canvas");
 
 let videoStream;
 
+const templateUrl1 = "target_patch/raw_abs_target.PNG";
+const templateUrl2 = "target_patch/raw_trp_target.PNG";
+let template1;
+let template2;
+
+const model = await tf.loadLayersModel(
+  "./Model/new_web_model_Trp/my-model.json"
+);
+
 // ImageTab Onclick
 imgOption.addEventListener("click", () => {
   stopVideoStream();
-  // captureButton.style.display = "block";
   video.style.display = "block";
-  // resetButton.style.display = "none";
   imgVideo.src = "375x500.png";
   const canvas = document.getElementById("new-canvas");
   canvas.style.display = "none";
@@ -87,35 +103,9 @@ fileInput.addEventListener("change", (event) => {
     img.style.height = "300px";
     img.style.width = "auto";
     otsuThreshold(image, "new-canvas");
-    // performWaveletLikeDecomposition(image, "new-canvas");
   };
   reader.readAsDataURL(file);
 });
-
-// Caotyre Onclick
-// captureButton.addEventListener("click", () => {
-//   console.log("here");
-//   threscanvas.style.display = "none";
-//   capturePhoto();
-//   captureButton.style.display = "none";
-//   video.style.display = "none";
-//   // resetButton.style.display = "block";
-// });
-
-// reset video page
-// resetButton.addEventListener("click", () => {
-//   captureButton.style.display = "block";
-//   video.style.display = "block";
-//   resetButton.style.display = "none";
-//   imgVideo.src = "375x500.png";
-//   threscanvas.style.display = "block";
-
-//   const predictionData = [
-//     { className: "ABS", probability: 0 },
-//     { className: "TRP", probability: 0 },
-//   ];
-//   updateProgressBars(predictionData, "Vid");
-// });
 
 // Start video stream
 async function startVideoStream() {
@@ -152,6 +142,10 @@ async function startVideoStream() {
 
       // performWaveletLikeDecomposition(threscanvas, "thresCanvas");
       otsuThreshold(threscanvas, "thresCanvas");
+      localStorage.clear();
+
+      // Clear Session Storage
+      sessionStorage.clear();
       // threscanvas.style.display = "block";
       requestAnimationFrame(processFrame);
     }
@@ -193,9 +187,7 @@ async function classify(element, eleName) {
       const tensor = tf.browser.fromPixels(image, 3);
       const resizedImg = tf.image.resizeBilinear(tensor, [28, 28]);
       const normalizedImg = resizedImg.div(tf.scalar(255.0));
-      const model = await tf.loadLayersModel(
-        "./Model/new_web_model_Trp/my-model.json"
-      );
+
       const prediction = model.predict(normalizedImg.expandDims());
       const predictionArray = prediction.arraySync()[0];
 
@@ -217,89 +209,31 @@ async function classify(element, eleName) {
 async function otsuThreshold(img, canvasName) {
   let src = cv.imread(img);
 
-  const templateUrl1 = "target_patch/raw_abs_target.PNG";
-  const templateUrl2 = "target_patch/raw_trp_target.PNG";
-  let template1 = await loadImage(templateUrl1);
-  let template2 = await loadImage(templateUrl2);
+  template1 = await loadImage(templateUrl1);
+  template2 = await loadImage(templateUrl2);
   try {
     let results = orbMatchingWithTwoTemplates(src, template1, template2);
-    console.log("Matches with Template 1:", results.matchesTemplate1);
-    console.log("Matches with Template 2:", results.matchesTemplate2);
-    if (results.matchesTemplate1 + results.matchesTemplate2 > 160) {
+    if (
+      results.matchesTemplate1.size() + results.matchesTemplate2.size() >
+      160
+    ) {
       if (canvasName == "thresCanvas") {
-        console.log("here");
         threscanvas.style.display = "none";
         capturePhoto();
-        // captureButton.style.display = "none";
         video.style.display = "none";
-        // resetButton.style.display = "block";
       } else {
-        // const canvas = document.getElementById("new-canvas");
-        // canvas.style.display = "block";
         classify(img, "Img");
       }
     }
+    results.combinedImage.delete();
+    results.matchesTemplate1.delete();
+    results.matchesTemplate2.delete();
   } catch (e) {
     console.log("Error: " + e.message);
+  } finally {
+    src.delete();
   }
 }
-
-// function performWaveletLikeDecomposition(img, canvasName) {
-//   // let canvas = document.getElementById("new-canvas");
-
-//   // canvas.width = img.width / 2;
-//   // canvas.height = img.height / 2;
-//   // const canvasLL = document.getElementById("canvasLL");
-//   // const canvasLH = document.getElementById("canvasLH");
-//   // const canvasHL = document.getElementById("canvasHL");
-//   // const canvasHH = document.getElementById("canvasHH");
-
-//   // const ctxOriginal = canvas.getContext("2d");
-//   // canvas.width = img.width;
-//   // canvas.height = img.height;
-//   // ctxOriginal.drawImage(img, 0, 0, img.width, img.height);
-
-//   // Load the image into OpenCV
-//   let src = cv.imread(img);
-//   let gray = new cv.Mat();
-//   cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-
-//   // Apply GaussianBlur to simulate low-pass filtering (LL)
-//   let LL = new cv.Mat();
-//   cv.GaussianBlur(gray, LL, new cv.Size(9, 9), 0);
-
-//   // Subtract LL from the original to get high-pass (HH) content
-//   let HH = new cv.Mat();
-//   cv.subtract(gray, LL, HH);
-
-//   // Compute horizontal and vertical high-frequency sub-bands using Sobel filters
-//   let LH = new cv.Mat();
-//   let HL = new cv.Mat();
-//   cv.Sobel(gray, LH, cv.CV_64F, 1, 0, 3); // LH: Horizontal edges
-//   cv.Sobel(gray, HL, cv.CV_64F, 0, 1, 3); // HL: Vertical edges
-
-//   // Convert results to displayable format
-//   cv.convertScaleAbs(LH, LH);
-//   cv.convertScaleAbs(HL, HL);
-//   cv.convertScaleAbs(HH, HH);
-
-//   // Display results
-//   // displayResult(LL, canvasLL);
-//   // displayResult(LH, canvasLH);
-//   // displayResult(HL, canvasHL);
-//   // displayResult(HH, "new-canvas");
-//   cv.imshow(canvasName, HL);
-
-//   // Clean up
-//   src.delete();
-//   gray.delete();
-//   LL.delete();
-//   LH.delete();
-//   HL.delete();
-//   HH.delete();
-// }
-
-console.log("done");
 
 async function loadImage(url) {
   return new Promise((resolve, reject) => {
