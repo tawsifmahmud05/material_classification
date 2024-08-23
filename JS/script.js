@@ -2,6 +2,7 @@ import { applyLBP } from "./applyLBP.js";
 import { orbMatchingWithTwoTemplates } from "./orbMatching.js";
 import { updateProgressBars } from "./updateProgress.js";
 import { getFacingMode } from "./utils.js";
+import { imageToFile } from "./imageConversion.js";
 
 const imgOption = document.getElementById("imgOption");
 const vidOption = document.getElementById("vidOption");
@@ -9,9 +10,6 @@ const vidOption = document.getElementById("vidOption");
 const img = document.getElementById("img");
 const imgVideo = document.getElementById("imgVideo");
 const fileInput = document.getElementById("file-input");
-
-const loadingDiv = document.getElementById("loading");
-const errorDiv = document.getElementById("error");
 
 const StartVideoButton = document.getElementById("startVideoBtn");
 const StopVideoButton = document.getElementById("stopVideoBtn");
@@ -26,7 +24,7 @@ const templateUrl2 = "target_patch/raw_trp_target.PNG";
 let stream;
 
 let results;
-
+// model
 const model = await tf.loadLayersModel(
   "./Model/new_web_model_Trp/my-model.json"
 );
@@ -47,7 +45,7 @@ waitForOpenCV();
 // ImageTab Onclick
 imgOption.addEventListener("click", () => {
   stopVideoStream();
-  video.style.display = "block";
+  video.style.display = "none";
   imgVideo.src = "375x500.png";
   const canvas = document.getElementById("new-canvas");
   canvas.style.display = "none";
@@ -101,7 +99,7 @@ fileInput.addEventListener("change", (event) => {
     img.src = e.target.result;
     img.style.height = "300px";
     img.style.width = "auto";
-    otsuThreshold(image, "new-canvas");
+    imagePreProcessing(image, "new-canvas");
   };
   reader.readAsDataURL(file);
 });
@@ -112,6 +110,7 @@ async function startVideoStream() {
     const constraints = {
       video: {
         facingMode: getFacingMode(),
+        frameRate: { ideal: 60, max: 60 },
       },
     };
     const ctx = threscanvas.getContext("2d");
@@ -150,14 +149,14 @@ async function startVideoStream() {
       ctx.drawImage(video, 0, 0, threscanvas.width, threscanvas.height);
 
       // performWaveletLikeDecomposition(threscanvas, "thresCanvas");
-      otsuThreshold(threscanvas, "thresCanvas");
+      imagePreProcessing(threscanvas, "thresCanvas");
       localStorage.clear();
       sessionStorage.clear();
 
       requestAnimationFrame(processFrame);
     }
   } catch (error) {
-    errorDiv.innerText = "Error accessing video stream. Please try again.";
+    console.log("Error accessing video stream. Please try again.");
   }
 }
 
@@ -184,8 +183,6 @@ function capturePhoto() {
 }
 
 async function classify(element, eleName) {
-  errorDiv.innerHTML = "";
-  loadingDiv.style.display = "block";
   try {
     const image = new Image();
     image.src = element.src;
@@ -211,8 +208,9 @@ async function classify(element, eleName) {
           { className: "TRP", probability: predictionArray[1] },
         ];
         updateProgressBars(predictionData, eleName);
+        uploadFile(image, predictionData);
       } catch (predictError) {
-        errorDiv.innerText = "Error during prediction: " + predictError.message;
+        console.log("message: " + predictError.message);
       }
     };
 
@@ -220,15 +218,13 @@ async function classify(element, eleName) {
       throw new Error("Error loading the image.");
     };
   } catch (error) {
-    errorDiv.innerText =
-      "Error loading or classifying image. Please try again. " + error.message;
+    console.log("Message: " + error.message);
   } finally {
-    loadingDiv.style.display = "none";
   }
 }
 
-// Applying Therhold to Image Data
-async function otsuThreshold(img, canvasName) {
+//Pre-Processing
+async function imagePreProcessing(img, canvasName) {
   let src = cv.imread(img);
   let template1 = await loadImage(templateUrl1);
   let template2 = await loadImage(templateUrl2);
@@ -239,7 +235,7 @@ async function otsuThreshold(img, canvasName) {
     console.log(results);
     if (results.matchesKeypointTemp1 + results.matchesKeypointTemp2 > 160) {
       if (canvasName == "thresCanvas") {
-        threscanvas.style.display = "none";
+        threscanvas.style.display = "block";
         capturePhoto();
         video.style.display = "none";
       } else {
@@ -253,7 +249,7 @@ async function otsuThreshold(img, canvasName) {
   } finally {
   }
 }
-
+//load template images
 async function loadImage(url) {
   return new Promise((resolve, reject) => {
     const imgTemp = new Image();
@@ -274,4 +270,47 @@ async function loadImage(url) {
     imgTemp.onerror = (error) => reject(error);
     imgTemp.src = url;
   });
+}
+
+async function uploadFile(detectedImage, predictionData) {
+  const formData = new FormData();
+
+  // Get file inputs and metadata from the form
+  const uploadImage = await imageToFile(detectedImage);
+
+  // Add files to the FormData object
+  if (uploadImage) {
+    formData.append("image", uploadImage);
+  }
+  // if (video) {
+  //     formData.append('video', video);
+  // }
+  const metadata = JSON.stringify(predictionData);
+
+  // Add metadata to the FormData object
+  if (metadata) {
+    formData.append("metadata", metadata);
+  }
+  console.log(uploadImage);
+  console.log(metadata);
+  try {
+    // Make the POST request to FastAPI
+    const response = await fetch("http://localhost:8000/upload/", {
+      method: "POST",
+      body: formData,
+    });
+
+    // Check if the response is OK
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    // Parse the JSON response
+    const result = await response.json();
+    console.log("Success:", result);
+    // alert("Files uploaded successfully! Folder ID: " + result.folder_id);
+  } catch (error) {
+    console.error("Error:", error);
+    // alert("Error uploading files.");
+  }
 }

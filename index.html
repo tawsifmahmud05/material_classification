@@ -32,7 +32,7 @@
   </head>
   <body>
     <div class="container">
-      <ul class="nav nav-tabs" role="tablist">
+      <ul class="nav nav-pills" role="tablist">
         <li class="nav-item w-50">
           <a
             class="nav-link active"
@@ -54,17 +54,13 @@
         </li>
       </ul>
 
-      <!-- Tab panes -->
       <div class="tab-content">
         <div id="imageTab" class="tab-pane active">
           <br />
           <div class="row">
             <div class="col-md-4">
-              <h5>Upload Image</h5>
               <div id="image-section" class="d-flex">
-                <div
-                  class="input-group mb-3 mt-3 d-flex justify-content-center"
-                >
+                <div class="input-group d-flex justify-content-center">
                   <div class="input-group-prepend"></div>
                   <div class="custom-file">
                     <input
@@ -74,14 +70,16 @@
                       accept="image/*"
                       hidden
                     />
-                    <label for="file-input" class="fw-bold">Choose File</label>
+                    <label for="file-input" class="fw-bold">Choose Image</label>
                   </div>
                 </div>
               </div>
             </div>
             <div class="col-md-4">
               <div class="row d-flex justify-content-center">
-                <h5>Image Preview</h5>
+                <div class="mob-text mb-2">
+                  <h5>Image Preview</h5>
+                </div>
 
                 <div class="col">
                   <canvas
@@ -91,13 +89,15 @@
                   <img
                     id="img"
                     src="375x500.png"
-                    style="height: 300px; width: auto"
+                    style="height: 300px; width: auto; border-radius: 10px"
                   />
                 </div>
               </div>
             </div>
             <div class="col-md-4">
-              <h5>Results</h5>
+              <div class="mob-text mb-2">
+                <h5>Prediction</h5>
+              </div>
               <div class="row justify-content-center">
                 <div class="loading fw-bold" id="loading">Classifying...</div>
                 <div id="imageResult">
@@ -117,8 +117,8 @@
         <div id="videoTab" class="tab-pane fade">
           <br />
           <div class="row">
-            <div class="col-md-4">
-              <div class="d-flex justify-content-between">
+            <div class="col-md-4 col-6">
+              <div class="mob-text mb-2" style="margin-top: 0px">
                 <h5>Video</h5>
               </div>
               <div class="row">
@@ -131,20 +131,29 @@
                         height="200px"
                         autoplay
                         muted
+                        style="display: none"
                       ></video>
+
                       <canvas
                         id="thresCanvas"
-                        style="height: 200px; width: auto; display: none"
+                        style="
+                          height: 200px;
+                          width: auto;
+                          padding: 0px;
+                          border-radius: 10px;
+                        "
                       ></canvas>
                     </div>
-
                     <div class="row d-flex justify-content-center mt-3">
-                      <button id="startVideoBtn" class="btn bg-orange w-100">
+                      <button
+                        id="startVideoBtn"
+                        class="btn bg-orange w-50 fw-bold"
+                      >
                         Start
                       </button>
                       <button
                         id="stopVideoBtn"
-                        class="btn bg-blue w-100"
+                        class="btn bg-blue w-50 fw-bold"
                         style="display: none"
                       >
                         Stop
@@ -154,22 +163,26 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4 col-6">
               <div class="row d-flex justify-content-center">
-                <h5>Image Preview</h5>
+                <div class="mob-text mb-2">
+                  <h5>Capture Preview</h5>
+                </div>
 
                 <div class="col">
                   <canvas id="canvas" style="display: none"></canvas>
                   <img
                     id="imgVideo"
                     src="375x500.png"
-                    style="height: 200px; width: auto"
+                    style="height: 200px; width: auto; border-radius: 10px"
                   />
                 </div>
               </div>
             </div>
-            <div class="col-md-4">
-              <h5>Results</h5>
+            <div class="col-md-4 col-12">
+              <div class="mob-text mb-2">
+                <h5>Prediction</h5>
+              </div>
 
               <div class="row justify-content-center">
                 <div class="loading fw-bold" id="loading">Classifying...</div>

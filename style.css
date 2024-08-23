@@ -11,12 +11,8 @@ body {
   align-items: center;
   min-height: 100vh;
   flex-direction: column;
-  background: rgb(253, 240, 249);
-  background: linear-gradient(
-    142deg,
-    rgba(253, 240, 249, 1) 0%,
-    rgba(181, 218, 247, 1) 100%
-  );
+  background: rgb(212, 240, 252);
+  overflow: auto;
   background-size: cover;
   margin: 0;
 }
@@ -30,18 +26,16 @@ body {
 
   height: 100vh;
   padding: 20px;
+  padding-top: 10px;
 
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
-#file-input {
+/* #file-input {
   margin-bottom: 20px;
-}
-/* img {
-  max-width: 100%;
-  margin-top: 20px;
 } */
+
 #results {
   margin-top: 20px;
 }
@@ -58,62 +52,41 @@ body {
 .error {
   color: red;
 }
-/* #myABSProgress {
-  width: 100%;
-  background-color: #ddd;
-}
 
-#myABSBar {
-  width: 1%;
-  height: 30px;
-  background-color: #04aa6d;
-}
-#myTRPProgress {
-  width: 100%;
-  background-color: #ddd;
-}
-
-#myTRPBar {
-  width: 1%;
-  height: 30px;
-  background-color: #04aa6d;
-} */
-/* ABS Progress Bar */
 .absProgress {
-  background-color: #f1f1f1; /* Lighter background for contrast */
-  border-radius: 10px; /* Rounded corners for the progress container */
-  overflow: hidden; /* Ensure the inner bar stays within the container */
+  background-color: #f1f1f1;
+  border-radius: 10px;
+  overflow: hidden;
   border: 1px solid black;
 }
 
 .absBar {
-  width: 1%; /* Initial width, can be dynamically adjusted with JavaScript */
-  height: 25px;
-  /* background-color: #addfff;  */
-  text-align: center; /* Center the text inside the bar */
-  line-height: 30px; /* Vertically center the text */
-  color: rgb(0, 0, 0); /* Text color */
-  border-radius: 10px 0 0 10px; /* Rounded corners for the bar */
-  transition: width 0.5s ease-in-out; /* Smooth transition when width changes */
+  width: 1%;
+  height: 30px;
+
+  text-align: center;
+  line-height: 30px;
+  color: rgb(0, 0, 0);
+  border-radius: 10px 0 0 10px;
+  transition: width 0.5s ease-in-out;
 }
 
-/* TRP Progress Bar */
 .trpProgress {
-  background-color: #f1f1f1; /* Lighter background for contrast */
-  border-radius: 10px; /* Rounded corners for the progress container */
-  overflow: hidden; /* Ensure the inner bar stays within the container */
+  background-color: #f1f1f1;
+  border-radius: 10px;
+  overflow: hidden;
   border: 1px solid black;
 }
 
 .trpBar {
-  width: 1%; /* Initial width, can be dynamically adjusted with JavaScript */
-  height: 25px;
-  /* background-color: #addfff;  */
-  text-align: center; /* Center the text inside the bar */
-  line-height: 30px; /* Vertically center the text */
-  color: rgb(0, 0, 0); /* Text color */
-  border-radius: 10px 0 0 10px; /* Rounded corners for the bar */
-  transition: width 0.5s ease-in-out; /* Smooth transition when width changes */
+  width: 1%;
+  height: 30px;
+
+  text-align: center;
+  line-height: 30px;
+  color: rgb(0, 0, 0);
+  border-radius: 10px 0 0 10px;
+  transition: width 0.5s ease-in-out;
 }
 
 .bg-blue {
@@ -123,20 +96,18 @@ body {
   background-color: #90ee90;
 }
 
-/* General styling for navigation links */
 .nav-link {
-  color: #000000; /* Default link color */
-  text-decoration: none; /* Remove underline */
-  padding: 10px 15px; /* Add padding */
+  color: #000000;
+  text-decoration: none;
+  padding: 10px 15px;
   font-size: 20px;
+  font-weight: bold;
 }
 
-/* Styling for the active link */
 .nav-link.active {
-  background-color: #007bff; /* Background color for active link */
-  color: white; /* Text color for active link */
-  font-weight: bold; /* Make text bold */
-  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+  color: white;
+  font-weight: bold;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 label {
@@ -148,4 +119,31 @@ label {
 
   cursor: pointer;
   margin-top: 1rem;
+}
+
+/* #container {
+  border-radius: 10px;
+  background-color: white;
+  border: 1px solid #000;
+  overflow: hidden;
+}
+
+#container > div {
+  height: 200px;
+  background-color: red;
+} */
+@media only screen and (max-width: 768px) {
+  /* For mobile phones: */
+  /* [class*="col-"] {
+    width: 100%;
+  } */
+  .mob-text {
+    /* margin-top: 20px; */
+    display: flex;
+    justify-content: start;
+  }
+
+  #imgvideo {
+    width: 100%;
+  }
 }
