@@ -1,7 +1,11 @@
 import { applyLBP } from "./applyLBP.js";
 import { orbMatchingWithTwoTemplates } from "./orbMatching.js";
-import { updateProgressBars } from "./updateProgress.js";
-import { getFacingMode } from "./utils.js";
+import {
+  getFacingMode,
+  setPlaceholderThresCanvas,
+  updateProgressBars,
+  resetVidSection,
+} from "./utils.js";
 import { imageToFile } from "./imageConversion.js";
 
 const imgOption = document.getElementById("imgOption");
@@ -13,6 +17,7 @@ const fileInput = document.getElementById("file-input");
 
 const StartVideoButton = document.getElementById("startVideoBtn");
 const StopVideoButton = document.getElementById("stopVideoBtn");
+const ClearButton = document.getElementById("ClearBtn");
 
 const video = document.getElementById("video");
 const threscanvas = document.getElementById("thresCanvas");
@@ -42,6 +47,7 @@ function waitForOpenCV() {
 // Start waiting for OpenCV.js to load
 waitForOpenCV();
 
+setPlaceholderThresCanvas();
 // ImageTab Onclick
 imgOption.addEventListener("click", () => {
   stopVideoStream();
@@ -64,7 +70,7 @@ imgOption.addEventListener("click", () => {
 // VideoTab Onclick
 vidOption.addEventListener("click", () => {
   img.src = "375x500.png";
-  threscanvas.style.display = "none";
+  // threscanvas.style.display = "none";
   const predictionData = [
     { className: "ABS", probability: 0 },
     { className: "TRP", probability: 0 },
@@ -77,6 +83,7 @@ StopVideoButton.addEventListener("click", () => {
   threscanvas.style.display = "none";
   StopVideoButton.style.display = "none";
   StartVideoButton.style.display = "block";
+  setPlaceholderThresCanvas();
 
   stopVideoStream();
 });
@@ -87,6 +94,10 @@ StartVideoButton.addEventListener("click", () => {
   StartVideoButton.style.display = "none";
   StopVideoButton.style.display = "block";
   startVideoStream();
+});
+
+ClearButton.addEventListener("click", () => {
+  resetVidSection();
 });
 
 // file input change
@@ -295,10 +306,13 @@ async function uploadFile(detectedImage, predictionData) {
   console.log(metadata);
   try {
     // Make the POST request to FastAPI
-    const response = await fetch("http://localhost:8000/upload/", {
-      method: "POST",
-      body: formData,
-    });
+    const response = await fetch(
+      "https://dev.dc-material-detection.ktinformatik.com/upload/",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     // Check if the response is OK
     if (!response.ok) {

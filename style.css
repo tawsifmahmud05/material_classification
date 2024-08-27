@@ -98,6 +98,7 @@ body {
 
 .nav-link {
   color: #000000;
+  background-color: azure;
   text-decoration: none;
   padding: 10px 15px;
   font-size: 20px;
