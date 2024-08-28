@@ -6,8 +6,8 @@ import {
   updateProgressBars,
   resetVidSection,
 } from "./utils.js";
-import { imageToFile } from "./imageConversion.js";
-
+import { uploadFile } from "./upload.js";
+import { showModal } from "./modal.js";
 const imgOption = document.getElementById("imgOption");
 const vidOption = document.getElementById("vidOption");
 
@@ -15,18 +15,21 @@ const img = document.getElementById("img");
 const imgVideo = document.getElementById("imgVideo");
 const fileInput = document.getElementById("file-input");
 
-const StartVideoButton = document.getElementById("startVideoBtn");
-const StopVideoButton = document.getElementById("stopVideoBtn");
 const ClearButton = document.getElementById("ClearBtn");
+const modalButtonYes = document.getElementById("modalBtnYes");
+const modalButtonNo = document.getElementById("modalBtnNo");
 
 const video = document.getElementById("video");
 const threscanvas = document.getElementById("thresCanvas");
 const canvas = document.getElementById("canvas");
 
-const templateUrl1 = "target_patch/raw_abs_target.PNG";
-const templateUrl2 = "target_patch/raw_trp_target.PNG";
+const templateUrl1 = "assets/target_patch/raw_abs_target.PNG";
+const templateUrl2 = "assets/target_patch/raw_trp_target.PNG";
 
 let stream;
+
+let isVideoOn = false;
+let predictionData = [];
 
 let results;
 // model
@@ -48,11 +51,13 @@ function waitForOpenCV() {
 waitForOpenCV();
 
 setPlaceholderThresCanvas();
+
 // ImageTab Onclick
 imgOption.addEventListener("click", () => {
+  setPlaceholderThresCanvas();
   stopVideoStream();
   video.style.display = "none";
-  imgVideo.src = "375x500.png";
+  imgVideo.src = "assets\\placeholder.png";
   const canvas = document.getElementById("new-canvas");
   canvas.style.display = "none";
 
@@ -69,7 +74,7 @@ imgOption.addEventListener("click", () => {
 
 // VideoTab Onclick
 vidOption.addEventListener("click", () => {
-  img.src = "375x500.png";
+  img.src = "assets\\placeholder.png";
   // threscanvas.style.display = "none";
   const predictionData = [
     { className: "ABS", probability: 0 },
@@ -78,26 +83,24 @@ vidOption.addEventListener("click", () => {
   updateProgressBars(predictionData, "Img");
 });
 
-// StopVideo Onclick
-StopVideoButton.addEventListener("click", () => {
-  threscanvas.style.display = "none";
-  StopVideoButton.style.display = "none";
-  StartVideoButton.style.display = "block";
-  setPlaceholderThresCanvas();
-
-  stopVideoStream();
-});
-
-// StartVideo Onclick
-StartVideoButton.addEventListener("click", () => {
-  threscanvas.style.display = "block";
-  StartVideoButton.style.display = "none";
-  StopVideoButton.style.display = "block";
-  startVideoStream();
+document.getElementById("toggle").addEventListener("change", function () {
+  if (this.checked) {
+    console.log("Toggle is ON");
+    threscanvas.style.display = "block";
+    startVideoStream();
+    isVideoOn = true;
+  } else {
+    console.log("Toggle is OFF");
+    threscanvas.style.display = "none";
+    isVideoOn = false;
+    setPlaceholderThresCanvas();
+    stopVideoStream();
+  }
 });
 
 ClearButton.addEventListener("click", () => {
   resetVidSection();
+  setPlaceholderThresCanvas();
 });
 
 // file input change
@@ -115,13 +118,28 @@ fileInput.addEventListener("change", (event) => {
   reader.readAsDataURL(file);
 });
 
+modalButtonYes.addEventListener("click", () => {
+  const modalImage = document.getElementById("modal-image");
+  const actualLabelByUser = document.getElementById("modal-class").innerHTML;
+  const metadata = [...predictionData, { actualLabelByUser }];
+  uploadFile(modalImage, metadata);
+});
+
+modalButtonNo.addEventListener("click", () => {
+  const modalImage = document.getElementById("modal-image");
+  let falsePrediction = document.getElementById("modal-class").innerHTML;
+  const actualLabelByUser = falsePrediction == "TRP" ? "ABS" : "TRP";
+  const metadata = [...predictionData, { actualLabelByUser }];
+  uploadFile(modalImage, metadata);
+});
+
 // Start video stream
 async function startVideoStream() {
   try {
     const constraints = {
       video: {
         facingMode: getFacingMode(),
-        frameRate: { ideal: 60, max: 60 },
+        frameRate: { ideal: 30, max: 30 },
       },
     };
     const ctx = threscanvas.getContext("2d");
@@ -189,8 +207,9 @@ function capturePhoto() {
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   const dataURL = canvas.toDataURL("image/png");
   imgVideo.src = dataURL;
-
-  classify(imgVideo, "Vid");
+  if (isVideoOn) {
+    classify(imgVideo, "Vid");
+  }
 }
 
 async function classify(element, eleName) {
@@ -214,12 +233,19 @@ async function classify(element, eleName) {
         normalizedImg.dispose();
         prediction.dispose();
 
-        const predictionData = [
+        predictionData = [
           { className: "ABS", probability: predictionArray[0] },
           { className: "TRP", probability: predictionArray[1] },
         ];
-        updateProgressBars(predictionData, eleName);
-        uploadFile(image, predictionData);
+        let predictedClass = updateProgressBars(predictionData, eleName);
+        if (eleName == "Img") {
+          showModal(image, predictedClass);
+        } else {
+          await showModal(image, predictedClass);
+          // if (!isVideoOn) {
+          //   showModal(image, predictedClass);
+          // }
+        }
       } catch (predictError) {
         console.log("message: " + predictError.message);
       }
@@ -281,50 +307,4 @@ async function loadImage(url) {
     imgTemp.onerror = (error) => reject(error);
     imgTemp.src = url;
   });
-}
-
-async function uploadFile(detectedImage, predictionData) {
-  const formData = new FormData();
-
-  // Get file inputs and metadata from the form
-  const uploadImage = await imageToFile(detectedImage);
-
-  // Add files to the FormData object
-  if (uploadImage) {
-    formData.append("image", uploadImage);
-  }
-  // if (video) {
-  //     formData.append('video', video);
-  // }
-  const metadata = JSON.stringify(predictionData);
-
-  // Add metadata to the FormData object
-  if (metadata) {
-    formData.append("metadata", metadata);
-  }
-  console.log(uploadImage);
-  console.log(metadata);
-  try {
-    // Make the POST request to FastAPI
-    const response = await fetch(
-      "https://dev.dc-material-detection.ktinformatik.com/upload/",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    // Check if the response is OK
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    // Parse the JSON response
-    const result = await response.json();
-    console.log("Success:", result);
-    // alert("Files uploaded successfully! Folder ID: " + result.folder_id);
-  } catch (error) {
-    console.error("Error:", error);
-    // alert("Error uploading files.");
-  }
 }

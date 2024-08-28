@@ -35,7 +35,31 @@ export function setPlaceholderThresCanvas() {
   // Call the function to draw the placeholder
   drawPlaceholder();
 }
+
+// export function updateProgressBars(predictionData, txt) {
+//   predictionData.forEach((prediction) => {
+//     const progressBar = document.getElementById(
+//       `my${txt}${prediction.className}Bar`
+//     );
+//     const probabilityPercentage = prediction.probability * 100;
+
+//     progressBar.style.width = `${probabilityPercentage}%`;
+//     progressBar.textContent = `${
+//       prediction.className
+//     } (${probabilityPercentage.toFixed(2)}%)`;
+
+//     if (probabilityPercentage > 50) {
+//       progressBar.style.backgroundColor = "#d3f36b";
+//     } else {
+//       progressBar.style.backgroundColor = "#ffcccb";
+//     }
+//   });
+// }
+
 export function updateProgressBars(predictionData, txt) {
+  let maxProbability = 0;
+  let maxClassName = "";
+
   predictionData.forEach((prediction) => {
     const progressBar = document.getElementById(
       `my${txt}${prediction.className}Bar`
@@ -48,16 +72,24 @@ export function updateProgressBars(predictionData, txt) {
     } (${probabilityPercentage.toFixed(2)}%)`;
 
     if (probabilityPercentage > 50) {
-      progressBar.style.backgroundColor = "#90ee90";
+      progressBar.style.backgroundColor = "#87f43f";
     } else {
-      progressBar.style.backgroundColor = "#ffcccb";
+      progressBar.style.backgroundColor = "#f43f5e";
+    }
+
+    // Track the maximum probability and corresponding class name
+    if (prediction.probability > maxProbability) {
+      maxProbability = prediction.probability;
+      maxClassName = prediction.className;
     }
   });
+
+  return maxClassName;
 }
 
 export function resetVidSection() {
   video.style.display = "none";
-  imgVideo.src = "375x500.png";
+  imgVideo.src = "assets\\placeholder.png";
   const canvas = document.getElementById("new-canvas");
   canvas.style.display = "none";
 
@@ -65,6 +97,5 @@ export function resetVidSection() {
     { className: "ABS", probability: 0 },
     { className: "TRP", probability: 0 },
   ];
-
   updateProgressBars(predictionData, "Vid");
 }
