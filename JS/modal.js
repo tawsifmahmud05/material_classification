@@ -1,8 +1,14 @@
-let modal = new bootstrap.Modal(document.getElementById("gfg"));
-export function showModal(image, predictedClass) {
+let detectedModal = new bootstrap.Modal(document.getElementById("gfg"));
+export function showDetectedModal(image, predictedClass) {
   const modalImage = document.getElementById("modal-image");
   modalImage.src = image.src;
 
   document.getElementById("modal-class").innerHTML = predictedClass;
-  modal.show();
+  detectedModal.show();
+}
+let undetectedModal = new bootstrap.Modal(
+  document.getElementById("undetected-modal")
+);
+export function showUndetectedModal() {
+  undetectedModal.show();
 }

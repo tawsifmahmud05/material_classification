@@ -22,25 +22,50 @@ body {
   background-size: cover;
   margin: 0;
 }
-.container {
-  /* background: rgba(255, 255, 255, 0.25); */
-  /* box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18); */
 
+.container {
   height: 100vh;
   padding: 20px;
   padding-top: 10px;
-
   border-radius: 10px;
-  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
   text-align: center;
 }
-/* #file-input {
-  margin-bottom: 20px;
-} */
+
+.custom-file-input:not(:disabled) + label .loader {
+  display: none;
+}
+.custom-file-input:not(:disabled) + label .img-upload-text {
+  display: block;
+}
+
+.custom-file-input:disabled + label {
+  background-color: var(--dark); /* Light grey or any color you prefer */
+  cursor: not-allowed;
+  border: 1px solid #ccc;
+}
+
+/* You can add specific styles to the loader within the label */
+.custom-file-input:disabled + label .loader {
+  display: block; /* Hide loader when disabled, if desired */
+}
+.custom-file-input:disabled + label .img-upload-text {
+  display: none; /* Hide loader when disabled, if desired */
+}
+
+#img {
+  height: 300px;
+  width: auto;
+  border-radius: 10px;
+  border: 2px var(--dark) solid;
+}
+
+#thresCanvas {
+  height: 200px;
+  width: 150px;
+  padding: 0px;
+  border-radius: 10px;
+  border: 2px var(--dark) solid;
+}
 
 #results {
   margin-top: 20px;
@@ -50,13 +75,6 @@ body {
 }
 .class-name {
   font-weight: bold;
-}
-.loading {
-  display: none;
-  margin-top: 20px;
-}
-.error {
-  color: red;
 }
 
 .bg-section {
@@ -69,17 +87,15 @@ body {
   background-color: #f1f1f1;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid black;
+  border: 2px solid var(--dark);
 }
 
 .absBar {
   width: 1%;
   height: 30px;
-
   text-align: center;
   line-height: 30px;
   color: rgb(0, 0, 0);
-  border-radius: 10px 0 0 10px;
   transition: width 0.5s ease-in-out;
 }
 
@@ -87,7 +103,7 @@ body {
   background-color: #f1f1f1;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid black;
+  border: 2px solid var(--dark);
 }
 
 .trpBar {
@@ -97,15 +113,21 @@ body {
   text-align: center;
   line-height: 30px;
   color: rgb(0, 0, 0);
-  border-radius: 10px 0 0 10px;
   transition: width 0.5s ease-in-out;
 }
 
-.bg-blue {
-  background-color: #ffcccb;
+.loader {
+  width: 30px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 8px solid;
+  border-color: #ffffff #ffffff00;
+  animation: l1 1s infinite;
 }
-.bg-orange {
-  background-color: #90ee90;
+@keyframes l1 {
+  to {
+    transform: rotate(0.5turn);
+  }
 }
 
 .nav-link {
@@ -139,13 +161,70 @@ label {
   border-radius: 0.3rem;
   cursor: pointer;
 }
+.parent-camera-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.camera-container {
+  position: relative;
+  width: 150px; /* Adjust as needed */
+  height: 200px; /* Adjust as needed */
+  overflow: hidden;
+  border-radius: 10px;
+  border: 2px var(--dark) solid;
+}
+#imgVideo {
+  height: 100%;
+  width: 100%;
+  display: block;
+}
+.shutter-overlay {
+  border-radius: 10px;
+  border: 2px white solid;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.shutter-overlay.shutter-effect {
+  animation: shutter-flash 0.15s forwards, reveal-photo 1.5s forwards 0.15s;
+}
+
+@keyframes shutter-flash {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes reveal-photo {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 
 /* From Uiverse.io by MuhammadHasann */
 /* Responsive Toggle Switch */
 
 .toggle-cont {
-  width: 6.25rem; /* Responsive width */
-  height: 2.3rem; /* Responsive height */
+  width: 6.25rem;
+  height: 2.3rem;
   border-radius: 9999px;
 }
 
@@ -216,10 +295,6 @@ label {
 }
 
 @media only screen and (max-width: 768px) {
-  /* For mobile phones: */
-  /* [class*="col-"] {
-    width: 100%;
-  } */
   .mob-text {
     /* margin-top: 20px; */
     display: flex;

@@ -10,17 +10,13 @@ export async function uploadFile(detectedImage, predictionData) {
   if (uploadImage) {
     formData.append("image", uploadImage);
   }
-  // if (video) {
-  //     formData.append('video', video);
-  // }
-  const metadata = JSON.stringify(predictionData);
 
+  const metadata = JSON.stringify(predictionData);
   // Add metadata to the FormData object
   if (metadata) {
     formData.append("metadata", metadata);
   }
-  console.log(uploadImage);
-  console.log(metadata);
+
   try {
     // Make the POST request to FastAPI
     const response = await fetch(
@@ -38,10 +34,7 @@ export async function uploadFile(detectedImage, predictionData) {
 
     // Parse the JSON response
     const result = await response.json();
-    console.log("Success:", result);
-    // alert("Files uploaded successfully! Folder ID: " + result.folder_id);
   } catch (error) {
     console.error("Error:", error);
-    // alert("Error uploading files.");
   }
 }

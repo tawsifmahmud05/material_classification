@@ -106,7 +106,10 @@
                       accept="image/*"
                       hidden
                     />
-                    <label for="file-input" class="fw-bold">Choose Image</label>
+                    <label for="file-input" class="fw-bold">
+                      <span class="img-upload-text">Choose Image</span>
+                      <div class="loader"></div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -122,16 +125,7 @@
                     id="new-canvas"
                     style="height: 300px; width: auto; display: none"
                   ></canvas>
-                  <img
-                    id="img"
-                    src="assets\placeholder.png"
-                    style="
-                      height: 300px;
-                      width: auto;
-                      border-radius: 10px;
-                      border: 2px white solid;
-                    "
-                  />
+                  <img id="img" src="assets\placeholder.png" />
                 </div>
               </div>
             </div>
@@ -143,7 +137,6 @@
                 <h5>Prediction</h5>
               </div>
               <div class="row justify-content-center">
-                <div class="loading fw-bold" id="loading">Classifying...</div>
                 <div id="imageResult">
                   <div id="myImgABSProgress" class="absProgress">
                     <div id="myImgABSBar" class="absBar fw-bold">ABS</div>
@@ -181,16 +174,7 @@
                         style="display: none"
                       ></video>
 
-                      <canvas
-                        id="thresCanvas"
-                        style="
-                          height: 200px;
-                          width: auto;
-                          padding: 0px;
-                          border-radius: 10px;
-                          border: 2px white solid;
-                        "
-                      ></canvas>
+                      <canvas id="thresCanvas"></canvas>
                     </div>
                     <div class="row d-flex justify-content-center mt-3">
                       <div class="toggle-cont">
@@ -219,17 +203,16 @@
 
                 <div class="col">
                   <canvas id="canvas" style="display: none"></canvas>
-                  <img
-                    class="img-fluid"
-                    id="imgVideo"
-                    src="assets\placeholder.png"
-                    style="
-                      height: 200px;
-                      width: auto;
-                      border-radius: 10px;
-                      border: 2px white solid;
-                    "
-                  />
+                  <div class="parent-camera-container">
+                    <div class="camera-container">
+                      <img
+                        class="img-fluid"
+                        id="imgVideo"
+                        src="assets\placeholder.png"
+                      />
+                      <div class="shutter-overlay"></div>
+                    </div>
+                  </div>
                   <div class="row d-flex justify-content-center mt-3">
                     <button id="ClearBtn" class="btn btn-dark w-50 fw-bold">
                       Clear
@@ -247,7 +230,6 @@
               </div>
 
               <div class="row justify-content-center">
-                <div class="loading fw-bold" id="loading">Classifying...</div>
                 <div id="videoResult">
                   <div id="myVidABSProgress" class="absProgress">
                     <div id="myVidABSBar" class="absBar fw-bold">ABS</div>
@@ -313,9 +295,35 @@
             </div>
           </div>
         </div>
+        <!-- modal end -->
       </div>
-
-      <!-- modal end -->
+      <div id="undetected-modal" class="modal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="staticBackdropLabel">
+                Try Again
+              </h1>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body fs-5 hw-bold">No texture found</div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

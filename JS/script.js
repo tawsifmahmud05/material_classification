@@ -7,13 +7,16 @@ import {
   resetVidSection,
 } from "./utils.js";
 import { uploadFile } from "./upload.js";
-import { showModal } from "./modal.js";
+import { showDetectedModal, showUndetectedModal } from "./modal.js";
+import { cameraShutter } from "./shutterEffect.js";
+
 const imgOption = document.getElementById("imgOption");
 const vidOption = document.getElementById("vidOption");
 
 const img = document.getElementById("img");
 const imgVideo = document.getElementById("imgVideo");
 const fileInput = document.getElementById("file-input");
+fileInput.disabled = true;
 
 const ClearButton = document.getElementById("ClearBtn");
 const modalButtonYes = document.getElementById("modalBtnYes");
@@ -30,6 +33,7 @@ let stream;
 
 let isVideoOn = false;
 let predictionData = [];
+let predictedClass;
 
 let results;
 // model
@@ -43,6 +47,7 @@ function waitForOpenCV() {
       // Check if OpenCV.js is ready
       clearInterval(checkInterval); // Stop checking
       console.log("OpenCV.js is loaded and ready to use.");
+      fileInput.disabled = false;
     }
   }, 100); // Check every 100ms
 }
@@ -67,9 +72,6 @@ imgOption.addEventListener("click", () => {
   ];
 
   updateProgressBars(predictionData, "Vid");
-
-  StopVideoButton.style.display = "none";
-  StartVideoButton.style.display = "block";
 });
 
 // VideoTab Onclick
@@ -91,10 +93,12 @@ document.getElementById("toggle").addEventListener("change", function () {
     isVideoOn = true;
   } else {
     console.log("Toggle is OFF");
-    threscanvas.style.display = "none";
     isVideoOn = false;
-    setPlaceholderThresCanvas();
     stopVideoStream();
+    if (!isVideoOn && predictionData.length > 0) {
+      showDetectedModal(imgVideo, predictedClass);
+    }
+    setPlaceholderThresCanvas();
   }
 });
 
@@ -108,13 +112,22 @@ fileInput.addEventListener("change", (event) => {
   const file = event.target.files[0];
   const reader = new FileReader();
   let image = new Image();
+
+  // Set up the image load event
+  image.onload = function () {
+    fileInput.disabled = true;
+    imagePreProcessing(image, "new-canvas");
+  };
+
+  // Create a URL for the selected file and assign it to the image source
   image.src = URL.createObjectURL(file);
+
   reader.onload = function (e) {
     img.src = e.target.result;
     img.style.height = "300px";
     img.style.width = "auto";
-    imagePreProcessing(image, "new-canvas");
   };
+
   reader.readAsDataURL(file);
 });
 
@@ -123,6 +136,7 @@ modalButtonYes.addEventListener("click", () => {
   const actualLabelByUser = document.getElementById("modal-class").innerHTML;
   const metadata = [...predictionData, { actualLabelByUser }];
   uploadFile(modalImage, metadata);
+  predictionData = [];
 });
 
 modalButtonNo.addEventListener("click", () => {
@@ -131,6 +145,7 @@ modalButtonNo.addEventListener("click", () => {
   const actualLabelByUser = falsePrediction == "TRP" ? "ABS" : "TRP";
   const metadata = [...predictionData, { actualLabelByUser }];
   uploadFile(modalImage, metadata);
+  predictionData = [];
 });
 
 // Start video stream
@@ -170,7 +185,7 @@ async function startVideoStream() {
     stream = await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject = stream;
     video.play();
-
+    let frameCounter = 0;
     function processFrame() {
       if (video.paused || video.ended) {
         return;
@@ -178,7 +193,19 @@ async function startVideoStream() {
       ctx.drawImage(video, 0, 0, threscanvas.width, threscanvas.height);
 
       // performWaveletLikeDecomposition(threscanvas, "thresCanvas");
-      imagePreProcessing(threscanvas, "thresCanvas");
+      if (frameCounter % 15 === 0) {
+        // Your processing logic here
+
+        imagePreProcessing(threscanvas, "thresCanvas");
+      }
+      // Increment the frame counter
+      frameCounter++;
+      // console.log(frameCounter);
+
+      // Reset the counter after every 60 frames (optional)
+      if (frameCounter >= 30) {
+        frameCounter = 0;
+      }
       localStorage.clear();
       sessionStorage.clear();
 
@@ -207,9 +234,8 @@ function capturePhoto() {
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   const dataURL = canvas.toDataURL("image/png");
   imgVideo.src = dataURL;
-  if (isVideoOn) {
-    classify(imgVideo, "Vid");
-  }
+  cameraShutter();
+  classify(imgVideo, "Vid");
 }
 
 async function classify(element, eleName) {
@@ -237,12 +263,12 @@ async function classify(element, eleName) {
           { className: "ABS", probability: predictionArray[0] },
           { className: "TRP", probability: predictionArray[1] },
         ];
-        let predictedClass = updateProgressBars(predictionData, eleName);
+        predictedClass = updateProgressBars(predictionData, eleName);
         if (eleName == "Img") {
-          showModal(image, predictedClass);
+          fileInput.disabled = false;
+          showDetectedModal(image, predictedClass);
         } else {
-          await showModal(image, predictedClass);
-          // if (!isVideoOn) {
+          // if (!isVideoOn && predictionData.length > 0) {
           //   showModal(image, predictedClass);
           // }
         }
@@ -269,7 +295,7 @@ async function imagePreProcessing(img, canvasName) {
   try {
     // results = await orbMatchingWithTwoTemplates(src, template1, template2);
     results = await orbMatchingWithTwoTemplates(src, template1, template2);
-    console.log(results);
+    // console.log(results);
     if (results.matchesKeypointTemp1 + results.matchesKeypointTemp2 > 160) {
       if (canvasName == "thresCanvas") {
         threscanvas.style.display = "block";
@@ -280,7 +306,13 @@ async function imagePreProcessing(img, canvasName) {
       }
     } else {
       console.log("Non-detected");
+      if (canvasName == "new-canvas") {
+        fileInput.disabled = false;
+        showUndetectedModal();
+      }
     }
+    // console.log(!isVideoOn);
+    // console.log(predictionData.length);
   } catch (e) {
     console.log("Error: " + e.message);
   } finally {

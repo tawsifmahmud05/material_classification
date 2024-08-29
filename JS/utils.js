@@ -14,12 +14,12 @@ export function setPlaceholderThresCanvas() {
   canvas.height = 200;
 
   // Placeholder text
-  const placeholderText = "Start Camera";
+  const placeholderText = "Preview";
 
   // Function to draw placeholder text
   function drawPlaceholder() {
     // Set background color (optional)
-    ctx.fillStyle = "#cccccc";
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Set text properties
@@ -35,26 +35,6 @@ export function setPlaceholderThresCanvas() {
   // Call the function to draw the placeholder
   drawPlaceholder();
 }
-
-// export function updateProgressBars(predictionData, txt) {
-//   predictionData.forEach((prediction) => {
-//     const progressBar = document.getElementById(
-//       `my${txt}${prediction.className}Bar`
-//     );
-//     const probabilityPercentage = prediction.probability * 100;
-
-//     progressBar.style.width = `${probabilityPercentage}%`;
-//     progressBar.textContent = `${
-//       prediction.className
-//     } (${probabilityPercentage.toFixed(2)}%)`;
-
-//     if (probabilityPercentage > 50) {
-//       progressBar.style.backgroundColor = "#d3f36b";
-//     } else {
-//       progressBar.style.backgroundColor = "#ffcccb";
-//     }
-//   });
-// }
 
 export function updateProgressBars(predictionData, txt) {
   let maxProbability = 0;
