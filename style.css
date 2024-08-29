@@ -2,6 +2,7 @@
   --dark: #24282c;
   --green: #d3f36b;
   --white: #ffffff;
+  --red: #f43f5e;
 }
 
 * {
@@ -175,6 +176,26 @@ label {
   border-radius: 10px;
   border: 2px var(--dark) solid;
 }
+.instruc-text {
+  display: none;
+  font-size: 10px;
+  color: var(--red);
+  width: 100%;
+  font-weight: bold;
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 #imgVideo {
   height: 100%;
   width: 100%;

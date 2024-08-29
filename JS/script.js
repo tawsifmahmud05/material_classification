@@ -25,6 +25,7 @@ const modalButtonNo = document.getElementById("modalBtnNo");
 const video = document.getElementById("video");
 const threscanvas = document.getElementById("thresCanvas");
 const canvas = document.getElementById("canvas");
+const blinkingtext = document.getElementById("blinking-text");
 
 const templateUrl1 = "assets/target_patch/raw_abs_target.PNG";
 const templateUrl2 = "assets/target_patch/raw_trp_target.PNG";
@@ -88,11 +89,14 @@ vidOption.addEventListener("click", () => {
 document.getElementById("toggle").addEventListener("change", function () {
   if (this.checked) {
     console.log("Toggle is ON");
+    blinkingtext.style.display = "block";
     threscanvas.style.display = "block";
     startVideoStream();
     isVideoOn = true;
   } else {
     console.log("Toggle is OFF");
+    blinkingtext.style.display = "none";
+
     isVideoOn = false;
     stopVideoStream();
     if (!isVideoOn && predictionData.length > 0) {
@@ -298,6 +302,7 @@ async function imagePreProcessing(img, canvasName) {
     // console.log(results);
     if (results.matchesKeypointTemp1 + results.matchesKeypointTemp2 > 160) {
       if (canvasName == "thresCanvas") {
+        blinkingtext.style.display = "none";
         threscanvas.style.display = "block";
         capturePhoto();
         video.style.display = "none";
